@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
-const ejs = require('ejs')
+const ejs = require('ejs');
+const { json } = require('body-parser');
 const app = express();
 const port = 3000;
 
@@ -12,6 +13,8 @@ const db = mysql.createConnection({
 });
 // setting tamplate engie
 app.set('view engine', 'ejs')
+app.set('views','views')
+
 //  common variable of database
 const database = 'regresi_linier_sederhana_db'
 const table = 'data_regresi'
@@ -27,14 +30,15 @@ db.connect((err) => {
 // source code of database mysql
 
 const sqlSelect = 'select * from data_regresi'
-db.query(sqlSelect,(err,result)=>
-console.log('hasil select database', result))
+db.query(sqlSelect,(err,result)=> {
+    console.log(result, 'berhasil')
+    app.get('/',(req,res)=> {
+        res.render('index.ejs',{result})
+    })
+})
 
 const sqlInsert = `insert into ${table}(variabel_independent,variabel_dependent) values ()`
 
-app.get('/', (req, res) => {
-    res.render('index.ejs');
-});
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
