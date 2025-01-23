@@ -10,6 +10,11 @@ const db = mysql.createConnection({
     password: '1234',
     database: 'regresi_linier_sederhana_db'
 });
+// setting tamplate engie
+app.set('view engine', 'ejs')
+//  common variable of database
+const database = 'regresi_linier_sederhana_db'
+const table = 'data_regresi'
 
 db.connect((err) => {
     if (err) {
@@ -18,12 +23,17 @@ db.connect((err) => {
     }
     console.log('Connected to the MySQL database...');
 });
+
+// source code of database mysql
+
 const sqlSelect = 'select * from data_regresi'
 db.query(sqlSelect,(err,result)=>
 console.log('hasil select database', result))
 
+const sqlInsert = `insert into ${table}(variabel_independent,variabel_dependent) values ()`
+
 app.get('/', (req, res) => {
-    res.send('Hello World!');
+    res.render('index.ejs');
 });
 
 app.listen(port, () => {
