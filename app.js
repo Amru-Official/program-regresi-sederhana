@@ -57,6 +57,16 @@ app.post ('/delete',(req,res)=>{
         res.redirect('/')
     })
 })
+// update data
+app.post ('/update',(req,res)=>{
+    const sqlDelete = `update regression_data set independent_variable= ${req.body.independent_variable},dependent_variable=${req.body.dependent_variable} where data_id=${req.body.data_id}`
+    db.query (sqlDelete,(err,result)=>{
+        if (err) {
+            console.log(err)
+        }
+        res.redirect('/')
+    })
+})
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

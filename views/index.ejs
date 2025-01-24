@@ -42,6 +42,22 @@
   </div>
   <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+  <!-- form update -->
+  <form action="/update" method="post">
+      <div class="form-floating mb-3">
+      <label for="data_id">Index Data</label>
+      <input type="text" name="data_id" class="data_id m-2 p-4" id="data_id" placeholder="Input Index of Data">
+    </div>  
+    <div class="form-floating mb-3">
+      <label for="independent_variable">Variabel Independen</label>
+      <input type="text" name="independent_variable" class="independent_variable m-2 p-4" id="independent_variable" placeholder="Input Independen Variabel">
+    </div>
+    <div class="form-floating">
+      <label for="dependent_variable">Variabel Dependen</label>
+      <input type="text" name="dependent_variable" class="dependent_variable m-2 p-4" id="dependent_variable" placeholder="Input Dependen Variabel">
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
     <!-- Bootstrap JS and dependencies CDN -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
