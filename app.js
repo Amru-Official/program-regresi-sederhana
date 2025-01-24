@@ -20,7 +20,7 @@ app.use(bodyParser.urlencoded({extended:true}))
 
 //  common variable of database
 const database = 'regresi_linier_sederhana_db'
-const table = 'data_regresi'
+const table = 'regression_data'
 
 db.connect((err) => {
     if (err) {
@@ -32,18 +32,28 @@ db.connect((err) => {
 
 // source code of database mysql
 // select database
-const sqlSelect = 'select * from data_regresi'
-db.query(sqlSelect,(err,result)=> {
-    console.log(result, 'berhasil')
-    app.get('/',(req,res)=> {
+app.get('/',(req,res)=> {
+    const sqlSelect = `select * from regression_data`
+    db.query(sqlSelect,(err,result)=> {
+        console.log(result, 'berhasil')        
         res.render('index',{result})
     })
 })
 
 // insert database
 app.post ('/add',(req,res)=>{
-    const sqlInsert = `insert into data_regresi(variabel_independent,variabel_dependent) values ('${req.body.variabel_independent}','${req.body.variabel_dependent}')`
+    const sqlInsert = `insert into regression_data(independent_variable,dependent_variable) values ('${req.body.independent_variable}','${req.body.dependent_variable}')`
     db.query(sqlInsert,(err,result)=>{
+        res.redirect('/')
+    })
+})
+// delete data
+app.post ('/delete',(req,res)=>{
+    const sqlDelete = `delete from regression_data where data_id=${req.body.data_id}`
+    db.query (sqlDelete,(err,result)=>{
+        if (err) {
+            console.log(err)
+        }
         res.redirect('/')
     })
 })

@@ -13,9 +13,9 @@
         <p class="lead">This is a simple Bootstrap template using CDN.</p>
         <% for (let data of result) { %>
           <ul>
-            <li><%= data.id %></li>
-            <li><%= data.variabel_independent %></li>
-            <li><%= data.variabel_dependent %></li>
+            <li><%= data.data_id %></li>
+            <li><%= data.independent_variable %></li>
+            <li><%= data.dependent_variable %></li>
           </ul>
         <% } %>
     </div>
@@ -23,15 +23,25 @@
     <!-- form input -->
   <form action="/add" method="post">
     <div class="form-floating mb-3">
-      <label for="variabel_independent">Variabel Independen</label>
-      <input type="text" name="variabel_independent" class="variabel_independent m-2 p-4" id="variabel_independent" placeholder="Input Independen Variabel">
+      <label for="independent_variable">Variabel Independen</label>
+      <input type="text" name="independent_variable" class="independent_variable m-2 p-4" id="independent_variable" placeholder="Input Independen Variabel">
     </div>
     <div class="form-floating">
-      <label for="variabel_dependent">Variabel Dependen</label>
-      <input type="text" name="variabel_dependent" class="variabel_dependent m-2 p-4" id="variabel_dependent" placeholder="Input Dependen Variabel">
+      <label for="dependent_variable">Variabel Dependen</label>
+      <input type="text" name="dependent_variable" class="dependent_variable m-2 p-4" id="dependent_variable" placeholder="Input Dependen Variabel">
     </div>
-    <input type="submit">
+    <button type="submit" class="btn btn-primary">Submit</button>
   </form>
+
+  <!-- form delete -->
+  <h3>Delete Data</h3>
+  <form action="/delete" method="post">
+    <div class="form-floating mb-3">
+    <label for="data_id">Index Data</label>
+    <input type="text" name="data_id" class="data_id m-2 p-4" id="data_id" placeholder="Input Index of Data">
+  </div>
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
     <!-- Bootstrap JS and dependencies CDN -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
