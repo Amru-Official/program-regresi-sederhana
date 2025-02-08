@@ -4,6 +4,7 @@ const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const path = require('path');
+const { calculateRegression } = require('./regressionCalculator');
 
 const app = express();
 const port = 4000;
@@ -44,53 +45,80 @@ app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Helper function for linear regression calculation
-function calculateRegression(data) {
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    const n = data.length;
-
-    if (n < 2) {
-        return {
-            error: 'Minimal dibutuhkan 2 data point untuk menghitung regresi'
-        };
+// Routes
+app.get('/', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM regression_data ORDER BY data_id');
+        res.render('index', { result: rows });
+    } catch (err) {
+        console.error('Error fetching data:', err);
+        res.status(500).send('Database error');
     }
+});
 
-    data.forEach(point => {
-        const x = parseFloat(point.independent_variable);
-        const y = parseFloat(point.dependent_variable);
+// Calculate regression endpoint
+app.get('/calculate-regression', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM regression_data ORDER BY data_id');
         
-        sumX += x;
-        sumY += y;
-        sumXY += x * y;
-        sumX2 += x * x;
-    });
+        if (rows.length < 2) {
+            return res.status(400).json({ 
+                error: 'Minimal diperlukan 2 data untuk melakukan analisis regresi' 
+            });
+        }
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-    
-    const yMean = sumY / n;
-    let totalSS = 0;
-    let residualSS = 0;
-    
-    data.forEach(point => {
-        const x = parseFloat(point.independent_variable);
-        const y = parseFloat(point.dependent_variable);
-        const yPred = slope * x + intercept;
-        
-        totalSS += Math.pow(y - yMean, 2);
-        residualSS += Math.pow(y - yPred, 2);
-    });
-    
-    const rSquared = 1 - (residualSS / totalSS);
+        // Format data for regression calculation
+        const data = rows.map(row => ({
+            independent_variable: row.independent_variable,
+            dependent_variable: row.dependent_variable
+        }));
+        console.log('data:', data);
 
-    return {
-        slope: slope.toFixed(4),
-        intercept: intercept.toFixed(4),
-        rSquared: rSquared.toFixed(4),
-        equation: `y = ${slope.toFixed(4)}x + ${intercept.toFixed(4)}`,
-        n: n
-    };
-}
+        // Calculate regression and perform tests
+        const regressionResults = calculateRegression(data);
+        console.log('sukses regressionResults:', regressionResults);
+
+        // Format results for frontend
+        const response = {
+            equation: regressionResults.equation,
+            rSquared: regressionResults.rSquared.toFixed(4),
+            n: rows.length,
+            
+            normalityTest: {
+                statistic: regressionResults.ksTest.statistic.toFixed(4),
+                pValue: regressionResults.ksTest.pValue.toFixed(4),
+                isNormal: !regressionResults.ksTest.rejectH0
+            },
+            
+            heteroscedasticityTest: regressionResults.bpTest.skipped 
+                ? { 
+                    skipped: true, 
+                    reason: regressionResults.bpTest.reason 
+                }
+                : {
+                    statistic: regressionResults.bpTest.statistic.toFixed(4),
+                    pValue: regressionResults.bpTest.pValue.toFixed(4),
+                    isHomoscedastic: !regressionResults.bpTest.rejectH0
+                },
+            
+            autocorrelationTest: regressionResults.dwTest.skipped
+                ? { 
+                    skipped: true, 
+                    reason: regressionResults.dwTest.reason 
+                }
+                : {
+                    statistic: regressionResults.dwTest.statistic.toFixed(4),
+                    interpretation: regressionResults.dwTest.interpretation
+                }
+        };
+
+        res.json(response);
+    } catch (err) {
+        console.error('Error calculating regression:', err);
+        res.status(500).json({ error: 'Gagal menghitung regresi: ' + err.message });
+    }
+    console.log(respone)
+});
 
 // Routes
 // READ - Get all data

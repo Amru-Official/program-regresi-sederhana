@@ -9,120 +9,219 @@
         .loading {
             display: none;
             position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+        }
+        .loading-spinner {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 1000;
+        }
+        .alert-fixed {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: none;
+        }
+        .result-card {
+            transition: all 0.3s ease;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .conclusion {
+            font-weight: 500;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .conclusion-positive {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .conclusion-negative {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .conclusion-warning {
+            background-color: #fff3cd;
+            color: #856404;
         }
     </style>
 </head>
 <body>
     <!-- Loading Spinner -->
     <div class="loading">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-2 text-center">Menghitung regresi...</div>
         </div>
     </div>
 
-    <div class="container mt-5">
+    <!-- Alert Notifications -->
+    <div id="alertNotification" class="alert alert-fixed" role="alert"></div>
+
+    <div class="container mt-5 mb-5">
         <h1 class="text-center mb-4">Data Regresi Linier Sederhana</h1>
         
-        <!-- Notifikasi -->
-        <div id="notification" class="alert alert-success d-none" role="alert">
-            Aksi berhasil dilakukan!
-        </div>
-
-        <!-- Form Buat Tabel Baru -->
-        <h3 class="mt-4">Buat Tabel Baru</h3>
-        <form action="/create-table" method="post" class="border p-4 rounded shadow-sm">
-            <div class="mb-3">
-                <label for="table_name" class="form-label">Nama Tabel</label>
-                <input type="text" class="form-control" id="table_name" name="table_name" required>
-            </div>
-            <div class="mb-3">
-                <label for="independent_var" class="form-label">Variabel Independen</label>
-                <input type="text" class="form-control" id="independent_var" name="independent_var" required>
-            </div>
-            <div class="mb-3">
-                <label for="dependent_var" class="form-label">Variabel Dependen</label>
-                <input type="text" class="form-control" id="dependent_var" name="dependent_var" required>
-            </div>
-            <button type="submit" class="btn btn-success">Buat Tabel</button>
-        </form>
-        
         <!-- Form Input Data -->
-        <h3 class="mt-4">Tambah / Update Data</h3>
-        <form id="dataForm" action="/add" method="post" class="border p-4 rounded shadow-sm">
-            <input type="hidden" id="data_id" name="data_id">
-            <div class="mb-3">
-                <label for="independent_variable" class="form-label">Variabel Independen</label>
-                <input type="number" step="any" class="form-control" id="independent_variable" name="independent_variable" required>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Input Data</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="dataForm" action="/add" method="post">
+                            <input type="hidden" id="data_id" name="data_id">
+                            <div class="mb-3">
+                                <label for="independent_variable" class="form-label">Variabel Independen (X)</label>
+                                <input type="number" step="any" class="form-control" id="independent_variable" name="independent_variable" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="dependent_variable" class="form-label">Variabel Dependen (Y)</label>
+                                <input type="number" step="any" class="form-control" id="dependent_variable" name="dependent_variable" required>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Simpan</button>
+                                <button type="reset" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-            <div class="mb-3">
-                <label for="dependent_variable" class="form-label">Variabel Dependen</label>
-                <input type="number" step="any" class="form-control" id="dependent_variable" name="dependent_variable" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Simpan</button>
-            <button type="reset" class="btn btn-secondary" onclick="resetForm()">Reset</button>
-        </form>
 
-        <!-- Tabel Data -->
-        <div class="table-responsive mt-4">
-            <table class="table table-bordered table-striped text-center">
-                <thead class="table-primary">
-                    <tr>
-                        <th>ID</th>
-                        <th>Variabel Independen</th>
-                        <th>Variabel Dependen</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% result.forEach(data => { %>
-                        <tr>
-                            <td><%= data.data_id %></td>
-                            <td><%= data.independent_variable %></td>
-                            <td><%= data.dependent_variable %></td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="fillForm('<%= data.data_id %>', '<%= data.independent_variable %>', '<%= data.dependent_variable %>')">Edit</button>
-                                <form action="/delete" method="post" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
-                                    <input type="hidden" name="data_id" value="<%= data.data_id %>">
-                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% }); %>
-                </tbody>
-            </table>
+            <div class="col-md-6">
+                <!-- Tabel Data -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Data Tersimpan</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover table-striped mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>X</th>
+                                        <th>Y</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% result.forEach(data => { %>
+                                        <tr>
+                                            <td><%= data.data_id %></td>
+                                            <td><%= data.independent_variable %></td>
+                                            <td><%= data.dependent_variable %></td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-warning" onclick="fillForm('<%= data.data_id %>', '<%= data.independent_variable %>', '<%= data.dependent_variable %>')">
+                                                        <i class="bi bi-pencil"></i> Edit
+                                                    </button>
+                                                    <form action="/delete" method="post" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                                                        <input type="hidden" name="data_id" value="<%= data.data_id %>">
+                                                        <button type="submit" class="btn btn-danger">
+                                                            <i class="bi bi-trash"></i> Hapus
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tombol Hitung Regresi -->
-        <div class="text-center mt-4">
-            <button id="calculateRegression" class="btn btn-info btn-lg">Hitung Regresi</button>
+        <div class="text-center mb-4">
+            <button id="calculateRegression" class="btn btn-lg btn-primary">
+                <i class="bi bi-calculator"></i> Hitung Regresi
+            </button>
         </div>
 
         <!-- Hasil Regresi -->
-        <div id="regressionResult" class="mt-4 p-4 border rounded d-none">
-            <h3>Hasil Regresi Linear</h3>
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Persamaan Regresi:</h5>
-                    <p id="equation" class="font-monospace"></p>
-                    
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <h5>Koefisien:</h5>
-                            <ul class="list-unstyled">
-                                <li>Slope (b): <span id="slope" class="font-monospace"></span></li>
-                                <li>Intercept (a): <span id="intercept" class="font-monospace"></span></li>
-                            </ul>
+        <div id="regressionResult" class="d-none">
+            <h2 class="text-center mb-4">Hasil Analisis Regresi Linear</h2>
+            
+            <!-- Persamaan Regresi dan Statistik Dasar -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card result-card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Persamaan Regresi</h5>
                         </div>
-                        <div class="col-md-6">
-                            <h5>Statistik:</h5>
-                            <ul class="list-unstyled">
-                                <li>R² (R-squared): <span id="rSquared" class="font-monospace"></span></li>
-                                <li>Jumlah data (n): <span id="nPoints" class="font-monospace"></span></li>
-                            </ul>
+                        <div class="card-body">
+                            <p id="equation" class="h4 text-center mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card result-card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Statistik Dasar</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">R² (Koefisien Determinasi): <span id="rSquared" class="fw-bold"></span></p>
+                            <p class="mb-0">Jumlah data (n): <span id="nPoints" class="fw-bold"></span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uji Asumsi Klasik -->
+            <h3 class="text-center mb-4">Hasil Uji Asumsi Klasik</h3>
+            <div class="row">
+                <!-- Normalitas -->
+                <div class="col-md-4">
+                    <div class="card result-card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Uji Normalitas</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">Statistik KS: <span id="ksStatistic" class="fw-bold"></span></p>
+                            <p class="mb-2">P-Value: <span id="ksPValue" class="fw-bold"></span></p>
+                            <div id="normalityConclusion" class="conclusion"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heteroskedastisitas -->
+                <div class="col-md-4">
+                    <div class="card result-card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Uji Heteroskedastisitas</h5>
+                        </div>
+                        <div class="card-body" id="heteroscedasticityContent">
+                            <p class="mb-2">Statistik BP: <span id="bpStatistic" class="fw-bold"></span></p>
+                            <p class="mb-2">P-Value: <span id="bpPValue" class="fw-bold"></span></p>
+                            <div id="heteroscedasticityConclusion" class="conclusion"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Autokorelasi -->
+                <div class="col-md-4">
+                    <div class="card result-card shadow-sm h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Uji Autokorelasi</h5>
+                        </div>
+                        <div class="card-body" id="autocorrelationContent">
+                            <p class="mb-2">Statistik DW: <span id="dwStatistic" class="fw-bold"></span></p>
+                            <div id="dwInterpretation" class="conclusion"></div>
                         </div>
                     </div>
                 </div>
@@ -131,6 +230,17 @@
     </div>
 
     <script>
+        // Function to show alert
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alertNotification');
+            alert.className = `alert alert-${type} alert-fixed`;
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
         // Function to fill form for editing
         function fillForm(id, independent, dependent) {
             document.getElementById('data_id').value = id;
@@ -155,43 +265,69 @@
             document.querySelector('.loading').style.display = 'none';
         }
 
-        // Calculate regression
+        // Function to update regression results
+        function updateRegressionResults(data) {
+            // Show results container
+            document.getElementById('regressionResult').classList.remove('d-none');
+
+            // Update basic regression results
+            document.getElementById('equation').textContent = data.equation;
+            document.getElementById('rSquared').textContent = `${(data.rSquared * 100).toFixed(2)}%`;
+            document.getElementById('nPoints').textContent = data.n;
+
+            // Update normality test results
+            const normalityConclusion = document.getElementById('normalityConclusion');
+            document.getElementById('ksStatistic').textContent = data.normalityTest.statistic;
+            document.getElementById('ksPValue').textContent = data.normalityTest.pValue;
+            normalityConclusion.textContent = data.normalityTest.isNormal ? 
+                'Residual berdistribusi normal' : 
+                'Residual tidak berdistribusi normal';
+            normalityConclusion.className = `conclusion ${data.normalityTest.isNormal ? 'conclusion-positive' : 'conclusion-negative'}`;
+
+            // Update heteroscedasticity test results
+            const heteroContent = document.getElementById('heteroscedasticityContent');
+            if (data.heteroscedasticityTest.skipped) {
+                heteroContent.innerHTML = `<div class="conclusion conclusion-warning">${data.heteroscedasticityTest.reason}</div>`;
+            } else {
+                document.getElementById('bpStatistic').textContent = data.heteroscedasticityTest.statistic;
+                document.getElementById('bpPValue').textContent = data.heteroscedasticityTest.pValue;
+                const heteroConclusion = document.getElementById('heteroscedasticityConclusion');
+                heteroConclusion.textContent = data.heteroscedasticityTest.isHomoscedastic ?
+                    'Tidak ada heteroskedastisitas' :
+                    'Terdapat heteroskedastisitas';
+                heteroConclusion.className = `conclusion ${data.heteroscedasticityTest.isHomoscedastic ? 'conclusion-positive' : 'conclusion-negative'}`;
+            }
+
+            // Update autocorrelation test results
+            const autoContent = document.getElementById('autocorrelationContent');
+            if (data.autocorrelationTest.skipped) {
+                autoContent.innerHTML = `<div class="conclusion conclusion-warning">${data.autocorrelationTest.reason}</div>`;
+            } else {
+                document.getElementById('dwStatistic').textContent = data.autocorrelationTest.statistic;
+                const dwInterpretation = document.getElementById('dwInterpretation');
+                dwInterpretation.textContent = data.autocorrelationTest.interpretation;
+                dwInterpretation.className = 'conclusion conclusion-warning';
+            }
+        }
+
+        // Event listener for calculate regression button
         document.getElementById('calculateRegression').addEventListener('click', function() {
             showLoading();
 
             fetch('/calculate-regression')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
+                .then(response => response.json())
                 .then(data => {
                     hideLoading();
-
                     if (data.error) {
-                        alert(data.error);
-                        return;
+                        showAlert(data.error, 'danger');
+                    } else {
+                        updateRegressionResults(data);
+                        showAlert('Perhitungan regresi berhasil!', 'success');
                     }
-                    
-                    // Update the regression results
-                    document.getElementById('equation').textContent = data.equation;
-                    document.getElementById('slope').textContent = data.slope;
-                    document.getElementById('intercept').textContent = data.intercept;
-                    document.getElementById('rSquared').textContent = data.rSquared;
-                    document.getElementById('nPoints').textContent = data.n;
-                    
-                    // Show the results section
-                    document.getElementById('regressionResult').classList.remove('d-none');
                 })
                 .catch(error => {
                     hideLoading();
-                    console.error('Error:', error);
-                    alert('Terjadi kesalahan saat menghitung regresi');
+                    showAlert('Terjadi kesalahan saat menghitung regresi: ' + error.message, 'danger');
                 });
         });
     </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
