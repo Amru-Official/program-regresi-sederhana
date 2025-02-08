@@ -3,3 +3,4 @@ node_modules/
 # files ignored by git
 package-lock.json
 readme.txt
+test.js

@@ -1,4 +1,3 @@
-// app.js
 const express = require('express');
 const mysql = require('mysql2/promise');
 const bodyParser = require('body-parser');
@@ -56,37 +55,39 @@ app.get('/', async (req, res) => {
     }
 });
 
-// Calculate regression endpoint
+// Calculate regression endpoint (PERBAIKAN)
 app.get('/calculate-regression', async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM regression_data ORDER BY data_id');
-        
+
         if (rows.length < 2) {
             return res.status(400).json({ 
                 error: 'Minimal diperlukan 2 data untuk melakukan analisis regresi' 
             });
         }
 
-        // Format data for regression calculation
+        // Format data
         const data = rows.map(row => ({
             independent_variable: row.independent_variable,
             dependent_variable: row.dependent_variable
         }));
-        console.log('data:', data);
 
-        // Calculate regression and perform tests
-        const regressionResults = calculateRegression(data);
-        console.log('sukses regressionResults:', regressionResults);
+        console.log('Data yang diambil:', data);
 
-        // Format results for frontend
+        // Panggil fungsi regresi (Harus `await` karena async)
+        const regressionResults = await calculateRegression(data);
+
+        console.log('Hasil regresi:', regressionResults);
+
+        // Format response untuk frontend
         const response = {
             equation: regressionResults.equation,
             rSquared: regressionResults.rSquared.toFixed(4),
             n: rows.length,
             
             normalityTest: {
-                statistic: regressionResults.ksTest.statistic.toFixed(4),
-                pValue: regressionResults.ksTest.pValue.toFixed(4),
+                statistic: regressionResults.ksTest.D.toFixed(4),
+                criticalValue: regressionResults.ksTest.criticalValue.toFixed(4),
                 isNormal: !regressionResults.ksTest.rejectH0
             },
             
@@ -116,19 +117,6 @@ app.get('/calculate-regression', async (req, res) => {
     } catch (err) {
         console.error('Error calculating regression:', err);
         res.status(500).json({ error: 'Gagal menghitung regresi: ' + err.message });
-    }
-    console.log(respone)
-});
-
-// Routes
-// READ - Get all data
-app.get('/', async (req, res) => {
-    try {
-        const [rows] = await pool.query('SELECT * FROM regression_data');
-        res.render('index', { result: rows });
-    } catch (err) {
-        console.error('Error fetching data:', err);
-        res.status(500).send('Database error');
     }
 });
 
@@ -183,6 +171,16 @@ app.post('/delete', async (req, res) => {
     }
 });
 
+// READ - Get all data
+app.get('/', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM regression_data');
+        res.render('index', { result: rows });
+    } catch (err) {
+        console.error('Error fetching data:', err);
+        res.status(500).send('Database error');
+    }
+});
 // CREATE TABLE - Create new table
 app.post('/create-table', async (req, res) => {
     let { table_name, independent_var, dependent_var } = req.body;
@@ -209,18 +207,6 @@ app.post('/create-table', async (req, res) => {
     } catch (err) {
         console.error('Error creating table:', err);
         res.status(500).send('Database error');
-    }
-});
-
-// Calculate regression endpoint
-app.get('/calculate-regression', async (req, res) => {
-    try {
-        const [rows] = await pool.query('SELECT * FROM regression_data');
-        const regressionResult = calculateRegression(rows);
-        res.json(regressionResult);
-    } catch (err) {
-        console.error('Error calculating regression:', err);
-        res.status(500).json({ error: 'Failed to calculate regression' });
     }
 });
 
