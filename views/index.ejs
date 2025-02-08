@@ -3,64 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bootstrap Template</title>
-    <!-- Bootstrap CSS CDN -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Simple Regression Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .loading {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="mt-5">Hello, Bootstrap! Skripsi Amru</h1>
-        <p class="lead">This is a simple Bootstrap template using CDN.</p>
-        <% for (let data of result) { %>
-          <ul>
-            <li><%= data.data_id %></li>
-            <li><%= data.independent_variable %></li>
-            <li><%= data.dependent_variable %></li>
-          </ul>
-        <% } %>
+    <!-- Loading Spinner -->
+    <div class="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
     </div>
 
-    <!-- form input -->
-  <form action="/add" method="post">
-    <div class="form-floating mb-3">
-      <label for="independent_variable">Variabel Independen</label>
-      <input type="text" name="independent_variable" class="independent_variable m-2 p-4" id="independent_variable" placeholder="Input Independen Variabel">
-    </div>
-    <div class="form-floating">
-      <label for="dependent_variable">Variabel Dependen</label>
-      <input type="text" name="dependent_variable" class="dependent_variable m-2 p-4" id="dependent_variable" placeholder="Input Dependen Variabel">
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Data Regresi Linier Sederhana</h1>
+        
+        <!-- Notifikasi -->
+        <div id="notification" class="alert alert-success d-none" role="alert">
+            Aksi berhasil dilakukan!
+        </div>
 
-  <!-- form delete -->
-  <h3>Delete Data</h3>
-  <form action="/delete" method="post">
-    <div class="form-floating mb-3">
-    <label for="data_id">Index Data</label>
-    <input type="text" name="data_id" class="data_id m-2 p-4" id="data_id" placeholder="Input Index of Data">
-  </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-  <!-- form update -->
-  <form action="/update" method="post">
-      <div class="form-floating mb-3">
-      <label for="data_id">Index Data</label>
-      <input type="text" name="data_id" class="data_id m-2 p-4" id="data_id" placeholder="Input Index of Data">
-    </div>  
-    <div class="form-floating mb-3">
-      <label for="independent_variable">Variabel Independen</label>
-      <input type="text" name="independent_variable" class="independent_variable m-2 p-4" id="independent_variable" placeholder="Input Independen Variabel">
+        <!-- Form Buat Tabel Baru -->
+        <h3 class="mt-4">Buat Tabel Baru</h3>
+        <form action="/create-table" method="post" class="border p-4 rounded shadow-sm">
+            <div class="mb-3">
+                <label for="table_name" class="form-label">Nama Tabel</label>
+                <input type="text" class="form-control" id="table_name" name="table_name" required>
+            </div>
+            <div class="mb-3">
+                <label for="independent_var" class="form-label">Variabel Independen</label>
+                <input type="text" class="form-control" id="independent_var" name="independent_var" required>
+            </div>
+            <div class="mb-3">
+                <label for="dependent_var" class="form-label">Variabel Dependen</label>
+                <input type="text" class="form-control" id="dependent_var" name="dependent_var" required>
+            </div>
+            <button type="submit" class="btn btn-success">Buat Tabel</button>
+        </form>
+        
+        <!-- Form Input Data -->
+        <h3 class="mt-4">Tambah / Update Data</h3>
+        <form id="dataForm" action="/add" method="post" class="border p-4 rounded shadow-sm">
+            <input type="hidden" id="data_id" name="data_id">
+            <div class="mb-3">
+                <label for="independent_variable" class="form-label">Variabel Independen</label>
+                <input type="number" step="any" class="form-control" id="independent_variable" name="independent_variable" required>
+            </div>
+            <div class="mb-3">
+                <label for="dependent_variable" class="form-label">Variabel Dependen</label>
+                <input type="number" step="any" class="form-control" id="dependent_variable" name="dependent_variable" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+            <button type="reset" class="btn btn-secondary" onclick="resetForm()">Reset</button>
+        </form>
+
+        <!-- Tabel Data -->
+        <div class="table-responsive mt-4">
+            <table class="table table-bordered table-striped text-center">
+                <thead class="table-primary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Variabel Independen</th>
+                        <th>Variabel Dependen</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% result.forEach(data => { %>
+                        <tr>
+                            <td><%= data.data_id %></td>
+                            <td><%= data.independent_variable %></td>
+                            <td><%= data.dependent_variable %></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="fillForm('<%= data.data_id %>', '<%= data.independent_variable %>', '<%= data.dependent_variable %>')">Edit</button>
+                                <form action="/delete" method="post" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                                    <input type="hidden" name="data_id" value="<%= data.data_id %>">
+                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tombol Hitung Regresi -->
+        <div class="text-center mt-4">
+            <button id="calculateRegression" class="btn btn-info btn-lg">Hitung Regresi</button>
+        </div>
+
+        <!-- Hasil Regresi -->
+        <div id="regressionResult" class="mt-4 p-4 border rounded d-none">
+            <h3>Hasil Regresi Linear</h3>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Persamaan Regresi:</h5>
+                    <p id="equation" class="font-monospace"></p>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h5>Koefisien:</h5>
+                            <ul class="list-unstyled">
+                                <li>Slope (b): <span id="slope" class="font-monospace"></span></li>
+                                <li>Intercept (a): <span id="intercept" class="font-monospace"></span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Statistik:</h5>
+                            <ul class="list-unstyled">
+                                <li>R² (R-squared): <span id="rSquared" class="font-monospace"></span></li>
+                                <li>Jumlah data (n): <span id="nPoints" class="font-monospace"></span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="form-floating">
-      <label for="dependent_variable">Variabel Dependen</label>
-      <input type="text" name="dependent_variable" class="dependent_variable m-2 p-4" id="dependent_variable" placeholder="Input Dependen Variabel">
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
-  </form>
-    <!-- Bootstrap JS and dependencies CDN -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Function to fill form for editing
+        function fillForm(id, independent, dependent) {
+            document.getElementById('data_id').value = id;
+            document.getElementById('independent_variable').value = independent;
+            document.getElementById('dependent_variable').value = dependent;
+            document.getElementById('dataForm').action = '/update';
+        }
+
+        // Function to reset form
+        function resetForm() {
+            document.getElementById('data_id').value = '';
+            document.getElementById('dataForm').action = '/add';
+        }
+
+        // Function to show loading spinner
+        function showLoading() {
+            document.querySelector('.loading').style.display = 'block';
+        }
+
+        // Function to hide loading spinner
+        function hideLoading() {
+            document.querySelector('.loading').style.display = 'none';
+        }
+
+        // Calculate regression
+        document.getElementById('calculateRegression').addEventListener('click', function() {
+            showLoading();
+
+            fetch('/calculate-regression')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    hideLoading();
+
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    
+                    // Update the regression results
+                    document.getElementById('equation').textContent = data.equation;
+                    document.getElementById('slope').textContent = data.slope;
+                    document.getElementById('intercept').textContent = data.intercept;
+                    document.getElementById('rSquared').textContent = data.rSquared;
+                    document.getElementById('nPoints').textContent = data.n;
+                    
+                    // Show the results section
+                    document.getElementById('regressionResult').classList.remove('d-none');
+                })
+                .catch(error => {
+                    hideLoading();
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan saat menghitung regresi');
+                });
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
