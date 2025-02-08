@@ -73,14 +73,21 @@ app.get('/calculate-regression', async (req, res) => {
         }));
 
         console.log('Data yang diambil:', data);
+        
+        // Format data for scatter plot
+        const scatterData = await rows.map(row => [
+            row.independent_variable,
+            row.dependent_variable
+        ]);
 
         // Panggil fungsi regresi (Harus `await` karena async)
         const regressionResults = await calculateRegression(data);
-
+        console.log('scatterData:', scatterData);
         console.log('Hasil regresi:', regressionResults);
 
         // Format response untuk frontend
         const response = {
+            scatterData: scatterData,
             equation: regressionResults.equation,
             rSquared: regressionResults.rSquared.toFixed(4),
             n: rows.length,

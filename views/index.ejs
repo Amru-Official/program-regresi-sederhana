@@ -54,6 +54,11 @@
             background-color: #fff3cd;
             color: #856404;
         }
+        svg {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+    }
     </style>
 </head>
 <body>
@@ -153,82 +158,84 @@
             </button>
         </div>
 
-        <!-- Hasil Regresi -->
-        <div id="regressionResult" class="d-none">
-            <h2 class="text-center mb-4">Hasil Analisis Regresi Linear</h2>
-            
-            <!-- Persamaan Regresi dan Statistik Dasar -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card result-card shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Persamaan Regresi</h5>
-                        </div>
-                        <div class="card-body">
-                            <p id="equation" class="h4 text-center mb-0"></p>
-                        </div>
-                    </div>
+       <!-- Hasil Regresi -->
+<div id="regressionResult" class="d-none">
+    <h2 class="text-center mb-4">Hasil Analisis Regresi Linear</h2>
+    
+    <!-- Persamaan Regresi dan Statistik Dasar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card result-card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Persamaan Regresi</h5>
                 </div>
-                <div class="col-md-6">
-                    <div class="card result-card shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Statistik Dasar</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-2">R² (Koefisien Determinasi): <span id="rSquared" class="fw-bold"></span></p>
-                            <p class="mb-0">Jumlah data (n): <span id="nPoints" class="fw-bold"></span></p>
-                        </div>
-                    </div>
+                <div class="card-body">
+                    <p id="equation" class="h4 text-center mb-0"></p>
                 </div>
             </div>
-
-            <!-- Uji Asumsi Klasik -->
-            <h3 class="text-center mb-4">Hasil Uji Asumsi Klasik</h3>
-            <div class="row">
-                <!-- Normalitas -->
-                <div class="col-md-4">
-                    <div class="card result-card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Uji Normalitas</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="mb-2">Statistik KS: <span id="ksStatistic" class="fw-bold"></span></p>
-                            <p class="mb-2">P-Value: <span id="ksPValue" class="fw-bold"></span></p>
-                            <div id="normalityConclusion" class="conclusion"></div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card result-card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Statistik Dasar</h5>
                 </div>
-
-                <!-- Heteroskedastisitas -->
-                <div class="col-md-4">
-                    <div class="card result-card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Uji Heteroskedastisitas</h5>
-                        </div>
-                        <div class="card-body" id="heteroscedasticityContent">
-                            <p class="mb-2">Statistik BP: <span id="bpStatistic" class="fw-bold"></span></p>
-                            <p class="mb-2">P-Value: <span id="bpPValue" class="fw-bold"></span></p>
-                            <div id="heteroscedasticityConclusion" class="conclusion"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Autokorelasi -->
-                <div class="col-md-4">
-                    <div class="card result-card shadow-sm h-100">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="card-title mb-0">Uji Autokorelasi</h5>
-                        </div>
-                        <div class="card-body" id="autocorrelationContent">
-                            <p class="mb-2">Statistik DW: <span id="dwStatistic" class="fw-bold"></span></p>
-                            <div id="dwInterpretation" class="conclusion"></div>
-                        </div>
-                    </div>
+                <div class="card-body">
+                    <p class="mb-2">R² (Koefisien Determinasi): <span id="rSquared" class="fw-bold"></span></p>
+                    <p class="mb-0">Jumlah data (n): <span id="nPoints" class="fw-bold"></span></p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Uji Asumsi Klasik -->
+    <h3 class="text-center mb-4">Hasil Uji Asumsi Klasik</h3>
+
+    <!-- Scatter Plot -->
+    <h3 class="text-center">Scatter Plot Visualization</h3>
+    <div class="d-flex justify-content-center mb-4">
+        <svg id="scatter-plot" width="600" height="400"></svg>
+    </div>
+    
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+        <!-- Normalitas -->
+        <div class="card result-card shadow-sm h-100" style="width: 18rem;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Uji Normalitas</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Statistik KS: <span id="ksStatistic" class="fw-bold"></span></p>
+                <p class="mb-2">P-Value: <span id="ksPValue" class="fw-bold"></span></p>
+                <div id="normalityConclusion" class="conclusion"></div>
+            </div>
+        </div>
+        
+        <!-- Heteroskedastisitas -->
+        <div class="card result-card shadow-sm h-100" style="width: 18rem;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Uji Heteroskedastisitas</h5>
+            </div>
+            <div class="card-body" id="heteroscedasticityContent">
+                <p class="mb-2">Statistik BP: <span id="bpStatistic" class="fw-bold"></span></p>
+                <p class="mb-2">P-Value: <span id="bpPValue" class="fw-bold"></span></p>
+                <div id="heteroscedasticityConclusion" class="conclusion"></div>
+            </div>
+        </div>
+        
+        <!-- Autokorelasi -->
+        <div class="card result-card shadow-sm h-100" style="width: 18rem;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Uji Autokorelasi</h5>
+            </div>
+            <div class="card-body" id="autocorrelationContent">
+                <p class="mb-2">Statistik DW: <span id="dwStatistic" class="fw-bold"></span></p>
+                <div id="dwInterpretation" class="conclusion"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script>
         // Function to show alert
         function showAlert(message, type = 'success') {
@@ -275,6 +282,9 @@
             document.getElementById('rSquared').textContent = `${(data.rSquared * 100).toFixed(2)}%`;
             document.getElementById('nPoints').textContent = data.n;
 
+            // Render scatter plot with the data
+            renderScatterPlot(data.scatterData);
+
             // Update normality test results
             const normalityConclusion = document.getElementById('normalityConclusion');
             document.getElementById('ksStatistic').textContent = data.normalityTest.statistic;
@@ -309,6 +319,45 @@
                 dwInterpretation.className = 'conclusion conclusion-warning';
             }
         }
+        
+          // function of scatter plot
+          function renderScatterPlot(data) {
+      const width = 600;
+      const height = 400;
+      const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+
+      const svg = d3
+        .select("#scatter-plot")
+        .attr("width", width)
+        .attr("height", height);
+
+      const x = d3.scaleLinear()
+        .domain(d3.extent(data, d => d[0]))
+        .range([margin.left, width - margin.right]);
+
+      const y = d3.scaleLinear()
+        .domain(d3.extent(data, d => d[1]))
+        .range([height - margin.bottom, margin.top]);
+
+      svg.selectAll("*").remove();
+
+      svg.append("g")
+        .attr("transform", `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x));
+
+      svg.append("g")
+        .attr("transform", `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
+
+      svg.selectAll("circle")
+        .data(data)
+        .join("circle")
+        .attr("cx", d => x(d[0]))
+        .attr("cy", d => y(d[1]))
+        .attr("r", 5)
+        .attr("fill", "blue");
+    }
+
 
         // Event listener for calculate regression button
         document.getElementById('calculateRegression').addEventListener('click', function() {
@@ -331,3 +380,5 @@
                 });
         });
     </script>
+</body>
+</html>
