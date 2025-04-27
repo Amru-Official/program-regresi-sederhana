@@ -44,27 +44,58 @@ app.use(bodyParser.json());
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Get all table names
+app.get('/tables', async (req, res) => {
+    try {
+        const [rows] = await pool.query('SHOW TABLES');
+        const tables = rows.map(row => Object.values(row)[0]);
+        res.json(tables);
+    } catch (err) {
+        console.error('Error fetching tables:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Switch table route
+app.get('/switch-table/:tableName', async (req, res) => {
+    const { tableName } = req.params;
+    try {
+        const [rows] = await pool.query(`SELECT * FROM ${tableName} ORDER BY data_id`);
+        res.json(rows);
+    } catch (err) {
+        console.error('Error fetching table data:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 // Routes
 app.get('/', async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT * FROM regression_data ORDER BY data_id');
-        res.render('index', { result: rows });
+        const [tableRows] = await pool.query('SHOW TABLES');
+        const tables = tableRows.map(row => Object.values(row)[0]);
+        const [dataRows] = await pool.query('SELECT * FROM regression_data ORDER BY data_id');
+        res.render('index', { 
+            result: dataRows,
+            tables: tables
+        });
     } catch (err) {
         console.error('Error fetching data:', err);
         res.status(500).send('Database error');
     }
 });
 
-// Calculate regression endpoint (PERBAIKAN)
-app.get('/calculate-regression', async (req, res) => {
+    // Calculate regression endpoint 
+    app.get('/calculate-regression/:tableName', async (req, res) => {
+    const { tableName } = req.params;
     try {
-        const [rows] = await pool.query('SELECT * FROM regression_data ORDER BY data_id');
+        const [rows] = await pool.query(`SELECT * FROM ${tableName} ORDER BY data_id`);
 
         if (rows.length < 2) {
             return res.status(400).json({ 
                 error: 'Minimal diperlukan 2 data untuk melakukan analisis regresi' 
             });
         }
+
 
         // Format data
         const data = rows.map(row => ({
@@ -128,14 +159,15 @@ app.get('/calculate-regression', async (req, res) => {
 });
 
 // CREATE - Add new data
-app.post('/add', async (req, res) => {
+app.post('/add/:tableName', async (req, res) => {
+    const { tableName } = req.params;
     const { independent_variable, dependent_variable } = req.body;
     try {
         if (!independent_variable || !dependent_variable) {
             return res.status(400).send('All fields are required');
         }
         await pool.query(
-            'INSERT INTO regression_data (independent_variable, dependent_variable) VALUES (?, ?)',
+            `INSERT INTO ${tableName} (independent_variable, dependent_variable) VALUES (?, ?)`,
             [independent_variable, dependent_variable]
         );
         res.redirect('/');
@@ -146,14 +178,15 @@ app.post('/add', async (req, res) => {
 });
 
 // UPDATE - Update existing data
-app.post('/update', async (req, res) => {
+app.post('/update/:tableName', async (req, res) => {
+    const { tableName } = req.params;
     const { data_id, independent_variable, dependent_variable } = req.body;
     try {
         if (!data_id || !independent_variable || !dependent_variable) {
             return res.status(400).send('All fields are required');
         }
         await pool.query(
-            'UPDATE regression_data SET independent_variable = ?, dependent_variable = ? WHERE data_id = ?',
+            `UPDATE ${tableName} SET independent_variable = ?, dependent_variable = ? WHERE data_id = ?`,
             [independent_variable, dependent_variable, data_id]
         );
         res.redirect('/');
@@ -164,13 +197,14 @@ app.post('/update', async (req, res) => {
 });
 
 // DELETE - Delete data
-app.post('/delete', async (req, res) => {
+app.post('/delete/:tableName', async (req, res) => {
+    const { tableName } = req.params;
     const { data_id } = req.body;
     try {
         if (!data_id) {
             return res.status(400).send('Data ID is required');
         }
-        await pool.query('DELETE FROM regression_data WHERE data_id = ?', [data_id]);
+        await pool.query(`DELETE FROM ${tableName} WHERE data_id = ?`, [data_id]);
         res.redirect('/');
     } catch (err) {
         console.error('Error deleting data:', err);

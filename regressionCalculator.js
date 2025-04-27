@@ -1,5 +1,5 @@
 const LinearRegression = require('./regresi/regresi-linier-sederhana');
-const KolmogorovSmirnovTest = require('./regresi/kolmogorov-smirnov-test');
+const JarqueBeraTest = require('./regresi/jarque-bera-test');
 const BreuschPaganTest = require('./regresi/breusch-pagan-test');
 const { calculateDurbinWatson, interpretDurbinWatson } = require('./regresi/durbin-watson-test');
 const { jStat } = require('jstat');
@@ -48,21 +48,24 @@ function calculateRegression(data) {
             residuals
         };
 
-        // **Step 2: Uji Kolmogorov-Smirnov**
-        const ksTest = new KolmogorovSmirnovTest(residuals, mean, stdDev);
-        const ksResult = ksTest.performTest();
+        // **Step 2: Uji Jarque-Bera untuk normalitas** (menggantikan KS test)
+        const jbTest = new JarqueBeraTest(residuals, mean, stdDev);
+        const jbResult = jbTest.performTest();
 
-        if (!ksResult) {
-            throw new Error('Hasil KS Test tidak valid.');
+        if (!jbResult) {
+            throw new Error('Hasil JB Test tidak valid.');
         }
 
-        regressionResult.ksTest = ksResult;
+        regressionResult.ksTest = jbResult; // Mempertahankan nama properti agar tetap kompatibel
 
         // **Step 3: Uji Breusch-Pagan**
-        if (!ksResult.rejectH0) {
+        // Jika residual berdistribusi normal, jalankan uji Breusch-Pagan
+        if (!jbResult.rejectH0) {
             try {
+                console.log('Menjalankan uji Breusch-Pagan...');
                 const bpTest = new BreuschPaganTest(formattedData, residuals);
                 const bpResult = bpTest.performTest();
+                
                 regressionResult.bpTest = {
                     skipped: false,
                     statistic: bpResult.statistic,
@@ -70,9 +73,10 @@ function calculateRegression(data) {
                     rejectH0: bpResult.rejectH0
                 };
             } catch (error) {
+                console.error('Error saat menjalankan uji Breusch-Pagan:', error);
                 regressionResult.bpTest = {
                     skipped: true,
-                    reason: 'Tidak dapat melakukan uji Breusch-Pagan'
+                    reason: 'Tidak dapat melakukan uji Breusch-Pagan: ' + error.message
                 };
             }
         } else {
